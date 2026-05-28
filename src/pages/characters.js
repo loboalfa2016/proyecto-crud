@@ -48,7 +48,7 @@ const renderCharacters = () => {
   container.innerHTML = characters
     .map(
       (char) => `
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition w-full max-w-sm mx-auto">
       <img 
         src="${char.image}" 
         alt="${char.name}"
@@ -323,7 +323,9 @@ export const charactersPage = async (app) => {
           Cargando personajes...
         </div>
 
-        <div id="characters-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 hidden"></div>
+        <div class="flex justify-center">
+          <div id="characters-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-items-center gap-6 w-full max-w-7xl" style="display:none;"></div>
+        </div>
       </div>
     </div>
   `;
@@ -334,7 +336,7 @@ export const charactersPage = async (app) => {
     allCharacters = data.results;
     renderCharacters();
     document.querySelector("#loading").classList.add("hidden");
-    document.querySelector("#characters-container").classList.remove("hidden");
+    document.querySelector("#characters-container").style.display = "";
 
     // TASK: Renderizar paginación
     const paginationDiv = document.querySelector("#pagination");
