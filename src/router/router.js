@@ -1,12 +1,14 @@
 // ========================================
 // TASK: Sistema de enrutamiento SPA
 // Gestionar navegación sin recargar página
+// Protección de rutas con autenticación
 // ========================================
 
 import { loginPage } from "../pages/login";
 import { charactersPage } from "../pages/characters";
 import { episodesPage } from "../pages/episodes";
 import { locationsPage } from "../pages/locations";
+import { isLoggedIn } from "../services/state";
 
 // TASK: Definir rutas disponibles
 const routes = {
@@ -15,6 +17,9 @@ const routes = {
   "/episodes": episodesPage,
   "/locations": locationsPage,
 };
+
+// TASK: Rutas protegidas (requieren autenticación)
+const protectedRoutes = ["/characters", "/episodes", "/locations"];
 
 // TASK: Navegar a una ruta específica
 export const navigateTo = (path) => {
@@ -28,6 +33,13 @@ export const router = async () => {
 
   const path = window.location.pathname;
   console.log({ path });
+
+  // TASK: Proteger rutas que requieren autenticación
+  if (protectedRoutes.includes(path) && !isLoggedIn()) {
+    history.pushState({}, "", "/");
+    router();
+    return;
+  }
 
   const page = routes[path];
 
@@ -44,7 +56,10 @@ export const router = async () => {
 
 // TASK: Actualizar estado de la navegación
 export const updateActiveNav = (path) => {
-  document.querySelectorAll("#navbar a").forEach((link) => {
+  const navLinks = document.querySelectorAll("#navbar a");
+  if (navLinks.length === 0) return;
+
+  navLinks.forEach((link) => {
     const href = link.getAttribute("href");
     if (href === path) {
       link.classList.add("border-b-2", "border-white");

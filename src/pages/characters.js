@@ -4,6 +4,7 @@ import { navigateTo } from "../router/router";
 // TASK: Página de Personajes
 // Mostrar, crear, editar y eliminar
 // personajes de la API y creados localmente
+// Filtrado según rol de usuario
 // ========================================
 
 import {
@@ -19,6 +20,8 @@ import {
   removeEditedCharacter,
   isCustomCharacter,
   getMergedCharacter,
+  getCurrentUser,
+  clearCurrentUser,
 } from "../services/state";
 import {
   showSuccess,
@@ -35,15 +38,23 @@ const renderCharacters = () => {
   const container = document.querySelector("#characters-container");
   if (!container) return;
 
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser?.role === "admin";
+
   // TASK: Obtener datos combinados (API + locales + ediciones)
   const apiCharacters = allCharacters;
   const createdCharacters = getCreatedCharacters();
   const editedCharacters = getEditedCharacters();
 
-  const characters = [
+  let characters = [
     ...apiCharacters.map((char) => getMergedCharacter(char)),
     ...createdCharacters,
   ];
+
+  // TASK: Filtrar personajes según rol de usuario
+  if (!isAdmin && currentUser?.characterId) {
+    characters = characters.filter((c) => c.id === currentUser.characterId);
+  }
 
   container.innerHTML = characters
     .map(
@@ -72,18 +83,22 @@ const renderCharacters = () => {
           </span>
         </p>
         <div class="flex gap-2">
-          <button 
-            class="flex-1 bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 edit-btn"
-            data-id="${char.id}"
-          >
-            Editar
-          </button>
-          <button 
-            class="flex-1 bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 delete-btn"
-            data-id="${char.id}"
-          >
-            Eliminar
-          </button>
+          ${isAdmin ? `
+            <button 
+              class="flex-1 bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 edit-btn"
+              data-id="${char.id}"
+            >
+              Editar
+            </button>
+            <button 
+              class="flex-1 bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 delete-btn"
+              data-id="${char.id}"
+            >
+              Eliminar
+            </button>
+          ` : `
+            <p class="text-gray-500 text-sm italic w-full text-center py-2">Acceso de lectura</p>
+          `}
         </div>
       </div>
     </div>
@@ -91,21 +106,23 @@ const renderCharacters = () => {
     )
     .join("");
 
-  // TASK: Adjuntar manejadores de eventos a botones
-  container.querySelectorAll(".edit-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const id = e.target.dataset.id;
-      const character = characters.find((c) => c.id === parseInt(id) || c.id === id);
-      showEditForm(character);
+  // TASK: Adjuntar manejadores de eventos a botones (solo si es admin)
+  if (isAdmin) {
+    container.querySelectorAll(".edit-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const id = e.target.dataset.id;
+        const character = characters.find((c) => c.id === parseInt(id) || c.id === id);
+        showEditForm(character);
+      });
     });
-  });
 
-  container.querySelectorAll(".delete-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const id = e.target.dataset.id;
-      handleDeleteCharacter(parseInt(id) || id);
+    container.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const id = e.target.dataset.id;
+        handleDeleteCharacter(parseInt(id) || id);
+      });
     });
-  });
+  }
 };
 
 // TASK: Manejar eliminación de personajes
@@ -304,17 +321,36 @@ const showCreateForm = () => {
 
 // TASK: Página principal de personajes
 export const charactersPage = async (app) => {
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser?.role === "admin";
+
   app.innerHTML = `
     <div class="min-h-screen bg-gray-100 py-8">
       <div class="container mx-auto px-4">
+        <div class="mb-4 flex justify-between items-center">
+          <div>
+            <p class="text-sm text-gray-600">Sesión: <strong>${currentUser?.username || "Desconocido"}</strong> ${isAdmin ? "(Administrador)" : "(Usuario)"}</p>
+          </div>
+          <button 
+            id="logout-btn"
+            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 text-sm"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
+
         <div class="mb-8 flex justify-between items-center">
           <h1 class="text-4xl font-bold text-gray-800">Personajes</h1>
-          <button 
-            id="create-btn"
-            class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600"
-          >
-            + Crear Personaje
-          </button>
+          ${isAdmin ? `
+            <button 
+              id="create-btn"
+              class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600"
+            >
+              + Crear Personaje
+            </button>
+          ` : `
+            <p class="text-gray-600 text-sm italic">Vista de usuario normal</p>
+          `}
         </div>
 
         <div id="pagination" class="mb-8 flex justify-center gap-2"></div>
@@ -362,8 +398,19 @@ export const charactersPage = async (app) => {
     document.querySelector("#loading").textContent = "Error cargando personajes";
   }
 
-  // TASK: Adjuntar manejador de creación
-  document.querySelector("#create-btn").addEventListener("click", showCreateForm);
+  // TASK: Adjuntar manejador de creación (solo para admin)
+  if (isAdmin) {
+    const createBtn = document.querySelector("#create-btn");
+    if (createBtn) {
+      createBtn.addEventListener("click", showCreateForm);
+    }
+  }
+
+  // TASK: Manejar logout
+  document.querySelector("#logout-btn").addEventListener("click", () => {
+    clearCurrentUser();
+    navigateTo("/");
+  });
 
   // TASK: Exponer función para manejo de imágenes rotas
   window.handleImageError = handleImageError;

@@ -7,6 +7,25 @@
 const STORAGE_KEYS = {
   CREATED_CHARACTERS: "created_characters",
   EDITED_CHARACTERS: "edited_characters",
+  CURRENT_USER: "current_user",
+};
+
+// TASK: Gestión de usuario logueado
+export const getCurrentUser = () => {
+  const data = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+  return data ? JSON.parse(data) : null;
+};
+
+export const setCurrentUser = (user) => {
+  localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+};
+
+export const clearCurrentUser = () => {
+  localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+};
+
+export const isLoggedIn = () => {
+  return getCurrentUser() !== null;
 };
 
 // TASK: Obtener personajes creados localmente
