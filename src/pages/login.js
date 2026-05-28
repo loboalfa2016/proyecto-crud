@@ -81,14 +81,25 @@ export const loginPage = (app) => {
     // Validar login de usuario normal (búsqueda de personaje)
     if (password === USER_PASSWORD) {
       try {
-        const { getCharacters, getCharactersByIds } = await import("../services/api");
-        const response = await getCharacters(1);
-        const allCharacters = response.results;
+        const { getCharacters } = await import("../services/api");
+        
+        // Buscar en múltiples páginas para encontrar el personaje
+        let character = null;
+        for (let page = 1; page <= 5; page++) {
+          const response = await getCharacters(page);
+          const allCharacters = response.results;
 
-        // Buscar personaje por nombre
-        const character = allCharacters.find(
-          (c) => c.name.toLowerCase().split(" ")[0] === username.toLowerCase()
-        );
+          // Buscar personaje por nombre completo o primer nombre
+          character = allCharacters.find((c) => {
+            const fullName = c.name.toLowerCase();
+            const firstName = c.name.toLowerCase().split(" ")[0];
+            const inputName = username.toLowerCase();
+            
+            return fullName === inputName || firstName === inputName;
+          });
+
+          if (character) break;
+        }
 
         if (character) {
           setCurrentUser({ 
