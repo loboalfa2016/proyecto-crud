@@ -200,35 +200,45 @@ npm run preview
 ---
 
 ## 📈 Diagrama de Flujo del Programa
+
 ```mermaid
 flowchart TD
-  A[Inicio de la App] --> B[Inicializar Navbar y Router]
-  B --> C[Detectar Ruta Actual]
-  C --> D{Ruta}
-  D -->|/characters| E[Renderizar Página de Personajes]
-  D -->|/episodes| F[Renderizar Página de Episodios]
-  D -->|/locations| G[Renderizar Página de Ubicaciones]
-
-  E --> H[Obtener personajes de la API]
-  H --> I[Leer personajes locales y ediciones]
-  I --> J[Combinar datos en una lista única]
-  J --> K[Renderizar tarjetas de personajes]
-  K --> L{Usuario interactúa}
-
-  L -->|Crear| M[Abrir modal de creación]
-  L -->|Editar| N[Abrir modal de edición]
-  L -->|Eliminar| O[Confirmar eliminación]
-
-  M --> P[Validar formulario]
-  P -->|Correcto| Q[Guardar personaje en localStorage]
-  P -->|Error| R[Mostrar mensaje de error]
-
-  N --> S[Actualizar personajes editados]
-  O --> T[Actualizar estado de eliminación]
-  Q --> I
+  A["🚀 Inicio App<br/>main.js"] --> B["Renderizar Navbar<br/>Router"]
+  B --> C{¿Usuario<br/>logueado?}
+  
+  C -->|No| D["Página Login"]
+  C -->|Sí| E["Página Personajes"]
+  
+  D --> F["Admin o Usuario?"]
+  F -->|Válido| G["setCurrentUser()"]
+  F -->|Error| D
+  G --> E
+  
+  E --> H["Obtener Personajes<br/>API + localStorage"]
+  H --> I["Mostrar Tarjetas"]
+  
+  I --> J{Admin?}
+  J -->|No| K["Solo Lectura"]
+  J -->|Sí| L["Mostrar Botones"]
+  
+  L --> M{Acción<br/>Usuario}
+  M -->|Crear| N["Crear Personaje"]
+  M -->|Editar| O["Editar Personaje"]
+  M -->|Eliminar| P["Eliminar Personaje"]
+  
+  N --> Q["Validar<br/>Formulario"]
+  O --> Q
+  P --> R["Confirmar<br/>Eliminación"]
+  
+  Q -->|Error| S["Mostrar Error"]
+  Q -->|OK| T["Guardar en<br/>localStorage"]
+  R -->|OK| T
   S --> I
-  T --> I
-  I --> J
+  T --> U["Actualizar<br/>Página"]
+  U --> I
+  
+  K --> V["Fin"]
+  R -->|Cancela| V
 ```
 
 ## 📊 Estructura de Datos
